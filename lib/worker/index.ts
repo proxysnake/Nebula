@@ -1,4 +1,5 @@
-import { BareResponse } from '@tomphttp/bare-client';
+//@ts-expect-error fuck
+import { BareResponse } from '@mercuryworkshop/bare-mux';
 import { DynamicBundle } from '../global/bundle';
 import Cookie from '../global/cookie';
 import about from '../global/util/about';
@@ -115,7 +116,6 @@ import about from '../global/util/about';
   const __dynamic: DynamicBundle = new DynamicBundle(self.__dynamic$config), blockList = self.__dynamic$config.block || [];
 
   __dynamic.config = self.__dynamic$config;
-  __dynamic.config.bare.path = typeof __dynamic.config.bare.path === 'string' ? [ new URL(__dynamic.config.bare.path, self.location) ][0] : __dynamic.config.bare.path.map((str:any) => new URL(str, self.location));
 
   __dynamic.encoding = {
     ...__dynamic.encoding,
@@ -128,7 +128,7 @@ import about from '../global/util/about';
 
   return self.Dynamic = class {
     constructor(config = self.__dynamic$config) {
-      __dynamic.bare = __dynamic.modules.bare.createBareClient(__dynamic.config.bare.path);
+      __dynamic.bare = new __dynamic.modules.bare.BareClient();
 
       self.__dynamic$config = config;
     }
@@ -142,7 +142,6 @@ import about from '../global/util/about';
     async route(event: Event | any) {
       const { request } = event;
 
-      if (request.url.startsWith(__dynamic.config.bare.path.toString())) return false;
       if (request.url.startsWith(location.origin + self.__dynamic$config.prefix)) return true;
 
       if (request.mode !== 'navigate') request.client = (await self.clients.matchAll()).find((e:any)=>e.id==event.clientId);
@@ -165,7 +164,6 @@ import about from '../global/util/about';
         if (request.mode !== 'navigate') request.client = (await self.clients.matchAll()).find((e:any)=>e.id==event.clientId);
 
         if (!!__dynamic.util.file(request)) return await __dynamic.util.edit(request);
-        if (request.url.startsWith(self.__dynamic$config.bare.path.toString())) return await fetch(request);
         if (!!__dynamic.util.path(request)) {
           if (!request.client || !request.url.startsWith('http'))
             return await fetch(request);

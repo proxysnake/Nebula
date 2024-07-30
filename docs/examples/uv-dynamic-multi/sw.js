@@ -9,20 +9,18 @@ const dynamic = new Dynamic();
 
 self.dynamic = dynamic;
 
-self.addEventListener('fetch',
-    event => {
-        event.respondWith(
-            (async function() {
-                if (await dynamic.route(event)) {
-                    return await dynamic.fetch(event);
-                }
-
-                if (event.request.url.startsWith(location.origin + "/service/uv/")) {
-                    return await uv.fetch(event);
-                }
-
-                return await fetch(event.request);
-            })()
-        );
+async function handleRequest(event) {
+    if (await dynamic.route(event)) {
+        return await dynamic.fetch(event);
     }
-);
+
+    if (uv.route(event)) {
+        return await uv.fetch(event);
+    }
+    
+    return await fetch(event.request)
+}
+
+self.addEventListener('fetch', (event) => {
+    event.respondWith(handleRequest(event));
+});

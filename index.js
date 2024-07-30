@@ -1,16 +1,26 @@
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import fastifyCompress from '@fastify/compress';
-import { createBareServer } from '@tomphttp/bare-server-node';
-import { createServer } from 'http';
-import chalk from 'chalk';
-import open from 'open';
 import { existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
+
+import { createServer } from 'http';
+import chalk from 'chalk';
+import open from 'open';
+
+// protocols
+import { createBareServer } from '@tomphttp/bare-server-node';
+import wisp from "wisp-server-node";
+
+//transports
+import { baremuxPath } from "@mercuryworkshop/bare-mux/node";
+import { epoxyPath } from "@mercuryworkshop/epoxy-transport";
+
 const require = createRequire(import.meta.url);
 const gitCommitInfo = require('git-commit-info');
+
 
 
 if (!existsSync("./dist")) await import("./esbuild.prod.js");
@@ -25,25 +35,30 @@ const info = {
   version: _v, 
 }
 
-const bare = createBareServer('/bare/');
+const bare = createBareServer("/bare/", {
+	logErrors: true,
+	blockLocal: false,
+});
+
 const serverFactory = (handler, opts) => {
   return createServer()
-    .on("request", (req, res) => {
-      if (req.url === "/info") {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(info));
-      } else if (bare.shouldRoute(req)) {
-        bare.routeRequest(req, res);
-      } else {
-        handler(req, res)
-      }
-    }).on("upgrade", (req, socket, head) => {
-      if (bare.shouldRoute(req)) {
-        bare.routeUpgrade(req, socket, head);
-      } else {
-        socket.end();
-      }
-    });
+  .on("request", (req, res) => {
+    if (req.url === "/info") {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(info));
+    } else if (bare.shouldRoute(req)) {
+      bare.routeRequest(req, res);
+    } else {
+      handler(req, res);
+    }
+  })
+  .on("upgrade", (req, socket, head) => {
+    if (bare.shouldRoute(req)) {
+      bare.routeUpgrade(req, socket, head);
+    } else {
+      wisp.routeRequest(req, socket, head);
+    }
+  });
 }
 const fastify = Fastify({ serverFactory });
 fastify.register(fastifyStatic, {
@@ -54,6 +69,16 @@ fastify.register(fastifyStatic, {
   root: join(__dirname, "./dist"),
   prefix: "/dynamic/",
   decorateReply: false
+});
+fastify.register(fastifyStatic, {
+	root: baremuxPath,
+	prefix: "/baremux/",
+	decorateReply: false,
+});
+fastify.register(fastifyStatic, {
+	root: epoxyPath,
+	prefix: "/epoxy/",
+	decorateReply: false,
 });
 fastify.register(fastifyCompress, {
   encodings: ["br"]
