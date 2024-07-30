@@ -12,11 +12,9 @@ export default function(self: Window | any, config: Object = {}, altURL: string 
   }
 
   const __dynamic: DynamicBundle = new DynamicBundle(self.__dynamic$config);
-  __dynamic.config.bare.path = (typeof __dynamic.config.bare.path === 'string' || __dynamic.config.bare.path instanceof URL) ? [ new URL(__dynamic.config.bare.path, self.location) ][0] : __dynamic.config.bare.path.map((str:any) => new URL(str, self.location));
-
   self.__dynamic$baseURL = altURL || self.__dynamic$url || __dynamic.url.decode(location.pathname + location.search + location.hash) || "";
   self.__dynamic = __dynamic;
-  self.__dynamic.bare = new self.__dynamic.modules.bare.BareClient(self.__dynamic$config.bare.path, self.__dynamic$bare);
+  self.__dynamic.bare = new self.__dynamic.modules.bare.BareClient();
   self.__dynamic.meta.load(new URL(self.__dynamic$baseURL));
 
   init(self, null), wrap(self);

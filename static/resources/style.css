@@ -244,6 +244,16 @@ canvas {
   display: flex;
 }
 
+#frame {
+  border: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #111;
+}
+
 .connectedindicator { 
   width: 20px;
     height: 20px;

@@ -1,4 +1,5 @@
-import { BareClient } from '@tomphttp/bare-client';
+//@ts-expect-error a
+import { BareClient } from '@mercuryworkshop/bare-mux';
 import DynamicModules from './modules';
 import DynamicRewrites from './rewrite';
 import DynamicUtil from './util';

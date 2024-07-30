@@ -1,4 +1,5 @@
 let workerLoaded;
+const connection = new BareMux.BareMuxConnection("/baremux/worker.js")
 
 async function worker() {
   return await navigator.serviceWorker.register("/sw.js", {
@@ -36,9 +37,14 @@ inpbox.addEventListener("submit", async (event) => {
     await worker();
   }
   
+	let frame = document.getElementById("frame");
+	frame.style.display = "block";
   const form = document.querySelector("form");
-  const formValue = document.querySelector("form input").value;
+  const formValue = document.querySelector("input").value;
   const url = isUrl(formValue) ? prependHttps(formValue) : 'https://www.google.com/search?q=' + encodeURIComponent(formValue);
-
-  location.href = form.action + "?url=" + encodeURIComponent(url);
+	let wispUrl = (location.protocol === "https:" ? "wss" : "ws") + "://" + location.host + "/wisp/";
+	if (await connection.getTransport() !== "/epoxy/index.mjs") {
+		await connection.setTransport("/epoxy/index.mjs", [{ wisp: wispUrl }]);
+	}
+  frame.src = form.action + "?url=" + encodeURIComponent(url);
 });
